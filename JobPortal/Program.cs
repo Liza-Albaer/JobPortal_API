@@ -17,6 +17,14 @@ builder.Services.AddDbContext<JobPortalDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
     b => b.MigrationsAssembly(typeof(JobPortalDbContext).Assembly.FullName)));
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy => policy.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
+});
+
 //builder.Services.AddTransient(typeof(IBaseRepository<> ), typeof(BaseRepository<>));
 builder.Services.AddTransient<IUnitOfWork,UnitOfWork>();
 builder.Services.AddSwaggerGen();
@@ -32,6 +40,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AllowAll");
 
 app.UseAuthorization();
 
