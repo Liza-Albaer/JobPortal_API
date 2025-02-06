@@ -35,45 +35,56 @@ namespace JobPortal.Controllers
         }
         [HttpPost]
       
-        public IActionResult Create([FromBody] JobApplication jobApplication)
+        public IActionResult Create([FromBody] JobApplicationDto jobApplicationDto)
         {
-            if (jobApplication == null)
+            if (jobApplicationDto == null)
                 return BadRequest("Invalid job application data");
 
             
-            Console.WriteLine($"JobApplication data: {jobApplication.JobId}, {jobApplication.Name}, {jobApplication.Email}");
+            Console.WriteLine($"JobApplication data: {jobApplicationDto.JobId}, {jobApplicationDto.Name}, {jobApplicationDto.Email}");
 
-            if (jobApplication.JobId == 0)
+            if (jobApplicationDto.JobId == 0)
                 return BadRequest("JobId is required.");
 
          
-            var job = _unitOfWork.Jobs.GetById(jobApplication.JobId);
+            var job = _unitOfWork.Jobs.GetById(jobApplicationDto.JobId);
             if (job == null)
                 return BadRequest("Invalid JobId.");
 
-            jobApplication.Job = job;
+            var jobapp=new JobApplication();
+            jobapp.JobId = jobApplicationDto.JobId;
+            jobapp.AppliedDate=DateTime.Now;
+            jobapp.Email = jobApplicationDto.Email;
+            jobapp.Name = jobApplicationDto.Name;
+            jobapp.Job = job;
+            jobapp.ResumeUrl= jobApplicationDto.ResumeUrl;
 
-            _unitOfWork.JobApplications.Add(jobApplication);
+            _unitOfWork.JobApplications.Add(jobapp);
             _unitOfWork.Complete(); 
 
             
             Console.WriteLine("Job application created successfully.");
 
-            return CreatedAtAction(nameof(GetById), new { id = jobApplication.ApplicationId }, jobApplication);
+            return CreatedAtAction(nameof(GetById), new { id = jobapp.ApplicationId }, jobapp);
         }
 
 
         [HttpPut("{id}")]
-        public IActionResult Update(int id, [FromBody] JobApplication jobApplication)
+        public IActionResult Update(int id, [FromBody] JobApplicationDto jobApplicationDto)
         {
-            if (jobApplication == null || id != jobApplication.ApplicationId)
+            if (jobApplicationDto == null || id == null)
                 return BadRequest("Invalid job application data");
 
             var existingJobApplication = _unitOfWork.JobApplications.GetById(id);
             if (existingJobApplication == null)
                 return NotFound("Job application not found");
-
-            _unitOfWork.JobApplications.Update(jobApplication);
+            existingJobApplication.Name = jobApplicationDto.Name;
+            existingJobApplication.JobId = jobApplicationDto.JobId;
+            var jobinfo=_unitOfWork.Jobs.GetById(jobApplicationDto.JobId);
+            existingJobApplication.Job = jobinfo;
+            existingJobApplication.ResumeUrl = jobApplicationDto.ResumeUrl;
+            existingJobApplication.Email = jobApplicationDto.Email;
+            _unitOfWork.JobApplications.Update(existingJobApplication);
             return Ok("Job application updated successfully");
         }
 
@@ -86,6 +97,13 @@ namespace JobPortal.Controllers
 
             _unitOfWork.JobApplications.Delete(id);
             return Ok("Job application deleted successfully");
+        }
+        public class JobApplicationDto
+        {
+            public string Name { get; set; }
+            public string Email { get; set; }
+            public string ResumeUrl { get; set; }
+            public int JobId { get; set; }
         }
     }
 }
