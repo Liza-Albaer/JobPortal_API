@@ -62,6 +62,7 @@ namespace JobPortal.Controllers
             _unitOfWork.JobApplications.Add(jobapp);
             _unitOfWork.Complete(); 
 
+
             
             Console.WriteLine("Job application created successfully.");
 
